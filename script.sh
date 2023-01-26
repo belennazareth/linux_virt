@@ -98,7 +98,7 @@ echo "⭐ Comprobando si existe la red intra ⭐"
 echo ""
 sleep 2
 
-if virsh net-list --all | grep -q "intra"; then
+if virsh -c qemu:///system net-list --all | grep "intra"; then
     echo "✅ Red intra encontrada ✅"
     echo ""
 
@@ -123,7 +123,7 @@ sleep 2
 
   # Comprobamos si existe la máquina virtual
 
-if virsh list --all | grep -q "maquina1"; then
+if virsh -c qemu:///system list --all | grep "maquina1"; then
     echo "✅ Máquina virtual maquina1 encontrada ✅"
     echo ""
 
@@ -137,22 +137,31 @@ else
     virsh -c qemu:///system autostart maquina1 >/dev/null
     echo "⭐ Máquina virtual maquina1 creada correctamente ⭐"
     echo ""
-    echo "⭐ Arrancando máquina virtual maquina1 ⭐"
     sleep 23
+fi
 
-    echo "⭐ Máquina virtual maquina1 arrancada correctamente ⭐"
-    echo ""
-    sleep 2
+  # Verificamos que la máquina virtual existe y configuramos
+
+if virsh list --all | grep -q "maquina1"; then
     ip=$(virsh -c qemu:///system domifaddr maquina1 | grep 10.10.20 | awk '{print $4}' | sed 's/...$//')
     echo "⭐ IP de la máquina virtual maquina1: $ip ⭐"
     echo ""
     sleep 2
     echo "⭐ Modificando el hostname a maquina1 ⭐"
     echo ""
-    ssh-keyscan -H "$ip" >> ~/.ssh/known_hosts 2>/dev/null
+    ssh-keyscan "$ip" >> ~/.ssh/known_hosts 2>/dev/null
     ssh -i virt debian@"$ip" "sudo hostnamectl set-hostname maquina1"
     ssh -i virt debian@"$ip" "sudo sh -c 'echo "127.0.0.1 maquina1" > /etc/hosts'" 2>/dev/null
     echo "⭐ Modificado correctamente ⭐"
+    echo ""
+    sleep 2
+
+else
+
+    echo "❌ No se ha podido crear la máquina virtual ❌"
+    echo ""
+    exit 1
+
 fi
 
 
