@@ -62,35 +62,41 @@ if [ ! -f /etc/libvirt/qemu/networks/intra.xml ]; then
     echo "❌ SE VA A CREAR LA RED 'intra' ❌"
     echo ""
     sleep 2
+    
+    # Comprobar si esta como root
+    if [ "$EUID" -ne 0 ]
+    then echo "🆘❗❗ Por favor, ejecuta el script como root ❗❗🆘"
+        exit
+    
+    else
+        echo "⭐ Creando fichero de configuración de la red intra ⭐"
+        sudo echo "
+            <network>
+              <name>intra</name>
+              <bridge name='intra'/>
+              <forward/>
+              <ip address='10.10.20.1' netmask='255.255.255.0'>
+                <dhcp>
+                  <range start='10.10.20.2' end='10.10.20.254'/>
+                </dhcp>
+              </ip>
+            </network>
+        " >> /etc/libvirt/qemu/networks/intra.xml
+        echo "⭐ Fichero de configuración de la red intra creado correctamente ⭐"
+        sleep 2
 
-    echo "⭐ Creando fichero de configuración de la red intra ⭐"
-    sudo touch /etc/libvirt/qemu/networks/intra.xml
-    sudo echo "
-        <network>
-          <name>intra</name>
-          <bridge name='intra'/>
-          <forward/>
-          <ip address='10.10.20.1' netmask='255.255.255.0'>
-            <dhcp>
-              <range start='10.10.20.2' end='10.10.20.254'/>
-            </dhcp>
-          </ip>
-        </network>
-    " >> /etc/libvirt/qemu/networks/intra.xml
-    echo "⭐ Fichero de configuración de la red intra creado correctamente ⭐"
-    sleep 2
+        echo "⭐ Creando red intra ⭐"
+        virsh -c qemu:///system net-define intra.xml >/dev/null
+        virsh -c qemu:///system net-autostart intra.xml >/dev/null
+        sleep 2
+        echo "⭐ Red intra creada correctamente ⭐"
+        sleep 1
 
-    echo "⭐ Creando red intra ⭐"
-    virsh -c qemu:///system net-define /etc/libvirt/qemu/networks/intra.xml >/dev/null
-    virsh -c qemu:///system net-start /etc/libvirt/qemu/networks/intra.xml >/dev/null
-    sleep 2
-    echo "⭐ Red intra creada correctamente ⭐"
-    sleep 1
+    fi
 
 else
     echo "✅ Red intra encontrada ✅"
     echo ""
-
 fi
 
 
