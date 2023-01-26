@@ -12,7 +12,7 @@ if [ ! -f bullseye-base-sparse.qcow2 ]; then
     sudo apt update > /dev/null 2>&1
     sudo apt install megatools -y > /dev/null 2>&1
     echo "⭐ Descargando imagen base ⭐"
-    megadl https://mega.nz/file/UvI3ETLQ#-FY372jhOTtfCvW4Mup0R9n9-XpnqtXzPnjcC3qB834
+    megadl https://mega.nz/file/5iYE1QDY#94qGT8iHVpDCLK6b85XWsrJvlg-EJ77n2tUXBkuKYaw
     echo "⭐ Imagen base descargada correctamente ⭐"
     echo ""
 else
@@ -26,9 +26,9 @@ fi
 echo "⭐ Creando imagen maquina1.qcow2 ⭐"
 qemu-img create -f qcow2 -b bullseye-base-sparse.qcow2 maquina1.qcow2 > /dev/null 2>&1
 sleep 1
-echo "------------------------------------------------------------------"
+echo "----------------------------------------------------------------------"
 ls -la | grep maquina1.qcow2
-echo "------------------------------------------------------------------"
+echo "----------------------------------------------------------------------"
 echo ""
 
 echo "⭐ Cambiando tamaño de la imagen a 5GB ⭐"
@@ -147,7 +147,7 @@ if virsh -c qemu:///system list --all | grep "maquina1" > /dev/null; then
     echo "⭐ IP de la máquina virtual maquina1: "$ip" ⭐"
     echo ""
     sleep 2
-    
+
     echo "⭐ Modificando el hostname a maquina1 ⭐"
     echo ""
     ssh-keyscan "$ip" >> ~/.ssh/known_hosts 2>/dev/null
@@ -164,6 +164,8 @@ else
 
 fi
 
+
+# Crea un volumen adicional de 1 GiB de tamaño en formato RAW ubicado en el pool por defecto
 
 
 
