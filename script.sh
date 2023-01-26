@@ -48,7 +48,7 @@ echo "Creando disco de datos 🐸 🐛 🐢 🐱 🐣 🐝 🦐 🐯 🦊 🐞 �
 rm maquina1.qcow2 && mv maquina1copia.qcow2 maquina1.qcow2
 
 echo "⭐ Disco de datos creado correctamente ⭐"
-
+sleep 1
 
 # Crea una red interna de nombre intra con salida al exterior mediante NAT que utilice el direccionamiento 10.10.20.0/24.
 
@@ -61,17 +61,53 @@ sleep 2
 if [ ! -f /etc/libvirt/qemu/networks/intra.xml ]; then
     echo "❌ SE VA A CREAR LA RED 'intra' ❌"
     echo ""
+    sleep 2
+
+    echo "⭐ Creando fichero de configuración de la red intra ⭐"
+    sudo touch /etc/libvirt/qemu/networks/intra.xml
+    sudo echo "
+        <network>
+          <name>intra</name>
+          <bridge name='intra'/>
+          <forward/>
+          <ip address='10.10.20.1' netmask='255.255.255.0'>
+            <dhcp>
+              <range start='10.10.20.2' end='10.10.20.254'/>
+            </dhcp>
+          </ip>
+        </network>
+    " >> /etc/libvirt/qemu/networks/intra.xml
+    echo "⭐ Fichero de configuración de la red intra creado correctamente ⭐"
+    sleep 2
+
     echo "⭐ Creando red intra ⭐"
     virsh -c qemu:///system net-define intra.xml >/dev/null
     virsh -c qemu:///system net-start intra >/dev/null
     sleep 2
     echo "⭐ Red intra creada correctamente ⭐"
+    sleep 1
 
 else
     echo "✅ Red intra encontrada ✅"
     echo ""
 
 fi
+
+
+# Crea una máquina virtual (maquina1) conectada a la red intra, con 1 GiB de RAM, que utilice como disco raíz maquina1.qcow2 y que se inicie automáticamente. Arranca la máquina. Modifica el fichero /etc/hostname con maquina1.
+
+echo "⭐ Creando máquina virtual maquina1 ⭐"
+virt-install --connect qemu:///system --virt-type kvm --name maquina1 --os-variant debian10 --network network=intra --disk maquina1.qcow2 --import --memory 1024 --vcpus 2 --noautoconsole > /dev/null
+virt-install -c qemu:///system  autostart maquina1 > /dev/null
+sleep 10
+echo "⭐ Máquina virtual maquina1 creada correctamente ⭐"
+
+echo "⭐ Modificando el fichero /etc/hostname con maquina1 ⭐"
+
+
+echo "⭐ Fichero /etc/hostname modificado correctamente ⭐"
+
+echo "⭐ Máquina virtual maquina1 creada correctamente ⭐"
 
 
 
