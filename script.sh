@@ -44,7 +44,7 @@ echo "Creando disco de datos 🐸 🐛 🐢 🐱 🐣 🐝 🦐 🐯 🦊 🐞 �
 virt-resize --expand /dev/vda1 maquina1.qcow2 maquina1copia.qcow2 >/dev/null
 sleep 2
 
-echo "Creando disco de datos 🐸 🐛 🐢 🐱 🐣 🐝 🦐 🐯 🦊 🐞 🐔 🐙 🐷 🦩 🦄 🐦 🐬 🐟"
+echo "Creando disco de datos 🐸 🐛 🐢 🐱 🐣 🐝 🦐 🐯 🦊 🐞 🐙 🐷 🐔 🦩 🦄 🐦 🐬 🐟"
 rm maquina1.qcow2 && mv maquina1copia.qcow2 maquina1.qcow2
 
 echo "⭐ Disco de datos creado correctamente ⭐"
@@ -156,6 +156,12 @@ if virsh -c qemu:///system list --all | grep "maquina1" > /dev/null; then
     echo ""
     sleep 2
 
+    virsh -c qemu:///system reboot maquina1 >/dev/null
+    echo "⭐ Reiniciando la máquina ⭐"
+    echo "⭐ Esto puede tardar unos minutos ⭐"
+    echo " 🕦 🕧 🕛 🕤 🕚 🕜 🕗 🕑 🕒 🕙 🕣 🕢 🕥 "
+    sleep 30
+
 else
 
     echo "❌ No se ha podido crear la máquina virtual ❌"
@@ -167,5 +173,112 @@ fi
 
 # Crea un volumen adicional de 1 GiB de tamaño en formato RAW ubicado en el pool por defecto
 
+  # Comprobamos si existe el volumen
+
+echo "⭐ Comprobando si existe el volumen adicional ⭐"
+echo ""
+sleep 2
+
+if virsh -c qemu:///system vol-list default | grep "adicional.raw" >/dev/null; then
+    echo "✅ Volumen adicional encontrado ✅"
+    echo ""
+
+else
+    echo "❌ Volumen adicional no encontrado ❌"
+    echo ""
+    echo "⭐ Creando volumen adicional ⭐"
+    virsh -c qemu:///system vol-create-as default adicional.raw 1G >/dev/null
+    echo "⭐ Volumen adicional creado correctamente ⭐"
+    echo ""
+    sleep 2
+fi
+
+
+# Una vez iniciada la MV maquina1, conecta el volumen a la máquina, crea un sistema de ficheros XFS en el volumen y móntalo en el directorio /var/www/html. Ten cuidado con los propietarios y grupos que pongas, para que funcione adecuadamente el siguiente punto.
+
+  # Comprobamos por ssh si tiene un volumen vdb en la máquina virtual maquina1
+
+echo "⭐ Comprobando si existe el volumen vdb en maquina1 ⭐"
+echo ""
+sleep 2
+
+ip=$(virsh -c qemu:///system domifaddr maquina1 | awk '{print $4}' | cut -d "/" -f 1 | sed -n 3p)
+
+if ssh -i virt debian@"$ip" "lsblk | grep vdb" >/dev/null; then
+    echo "✅ Volumen vdb encontrado ✅"
+    echo "" 
+
+else
+
+    echo "❌ Volumen vdb no encontrado ❌"
+    echo ""
+    sleep 2
+
+    echo "⭐ Conectando el volumen adicional a la máquina virtual maquina1 ⭐"
+    echo ""
+    virsh -c qemu:///system attach-disk maquina1 /var/lib/libvirt/images/adicional.raw vdb --driver=qemu --type disk --subdriver raw --persistent >/dev/null
+    echo "⭐ Volumen adicional conectado correctamente ⭐"
+    echo ""
+    sleep 2
+
+    echo "⭐ Dando formato XFS ⭐"
+    echo ""
+    ssh -i virt debian@"$ip" "sudo mkfs.xfs /dev/vdb" >/dev/null
+    echo "⭐ Formateado correctamente ⭐"
+    echo ""
+
+    echo "⭐ Montando el volumen en /var/www/html ⭐"
+    echo ""
+    ssh -i virt debian@"$ip" 'sudo mkdir -p /var/www/html' 
+    ssh -i virt debian@"$ip" "sudo mount /dev/vdb /var/www/html" >/dev/null 
+    echo "⭐ Montado correctamente ⭐"
+    echo ""
+    sleep 2
+
+    echo "⭐ Introduciendo en fstab ⭐"
+    ssh -i virt debian@"$ip" "sudo -- bash -c 'echo "/dev/vdb        /var/www/html   xfs     defaults        0       0" >> /etc/fstab'"
+    echo "⭐ Introducido correctamente ⭐"
+    echo ""
+    sleep 2
+
+fi
+
+# Instala en maquina1 el servidor web apache2. Copia un fichero index.html a la máquina virtual.
+
+  # Comprobamos si apache2 está instalado
+
+echo "⭐ Comprobando si apache2 está instalado ⭐"
+echo ""
+sleep 2
+
+if ssh -i virt debian@"$ip" "dpkg -l | grep apache2" >/dev/null; then
+    echo "✅ Apache2 instalado ✅"
+    echo ""
+
+else
+
+    echo "❌ Apache2 no instalado ❌"
+    echo ""
+    sleep 2
+
+    echo "⭐ Instalando apache2 ⭐"
+    echo ""
+    ssh -i virt debian@"$ip" "sudo apt update && sudo apt install apache2 -y" >/dev/null 2>&1
+    echo "⭐ Instalado correctamente ⭐"
+    echo ""
+    sleep 2
+
+    echo "⭐ Copiando index.html ⭐"
+    echo ""
+    scp -i virt index.html debian@"$ip":/home/debian >/dev/null
+    ssh -i virt debian@"$ip" "sudo chown www-data:www-data /home/debian/index.html" >/dev/null
+    ssh -i virt debian@"$ip" "sudo mv /home/debian/index.html /var/www/html" >/dev/null
+
+
+    echo "⭐ Copiado correctamente ⭐"
+    echo ""
+    sleep 2
+
+fi
 
 
