@@ -4,6 +4,7 @@
   # Comprobamos si existe la imagen base y si no la descargamos de la web: https://mega.nz/file/UvI3ETLQ#-FY372jhOTtfCvW4Mup0R9n9-XpnqtXzPnjcC3qB834
 
 echo "⭐ Comprobando si existe la imagen base ⭐"
+echo ""
 sleep 2
 
 if [ ! -f bullseye-base-sparse.qcow2 ]; then
@@ -47,5 +48,30 @@ echo "Creando disco de datos 🐸 🐛 🐢 🐱 🐣 🐝 🦐 🐯 🦊 🐞 �
 rm maquina1.qcow2 && mv maquina1copia.qcow2 maquina1.qcow2
 
 echo "⭐ Disco de datos creado correctamente ⭐"
+
+
+# Crea una red interna de nombre intra con salida al exterior mediante NAT que utilice el direccionamiento 10.10.20.0/24.
+
+  # Comprobamos si existe la red y si no la creamos
+
+echo "⭐ Comprobando si existe la red intra ⭐"
+echo ""
+sleep 2
+
+if [ ! -f /etc/libvirt/qemu/networks/intra.xml ]; then
+    echo "❌ SE VA A CREAR LA RED 'intra' ❌"
+    echo ""
+    echo "⭐ Creando red intra ⭐"
+    virsh -c qemu:///system net-define intra.xml >/dev/null
+    virsh -c qemu:///system net-start intra >/dev/null
+    sleep 2
+    echo "⭐ Red intra creada correctamente ⭐"
+
+else
+    echo "✅ Red intra encontrada ✅"
+    echo ""
+
+fi
+
 
 
