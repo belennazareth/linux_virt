@@ -81,8 +81,8 @@ if [ ! -f /etc/libvirt/qemu/networks/intra.xml ]; then
     sleep 2
 
     echo "⭐ Creando red intra ⭐"
-    virsh -c qemu:///system net-define intra.xml >/dev/null
-    virsh -c qemu:///system net-start intra >/dev/null
+    virsh -c qemu:///system net-define /etc/libvirt/qemu/networks/intra.xml >/dev/null
+    virsh -c qemu:///system net-start /etc/libvirt/qemu/networks/intra.xml >/dev/null
     sleep 2
     echo "⭐ Red intra creada correctamente ⭐"
     sleep 1
