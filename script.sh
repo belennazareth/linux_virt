@@ -95,6 +95,8 @@ fi
   # Comprobamos si existe la red y la arrancamos
 
 echo "⭐ Comprobando si existe la red intra ⭐"
+echo ""
+sleep 2
 
 if virsh net-list --all | grep -q "intra"; then
     echo "✅ Red intra encontrada ✅"
@@ -107,36 +109,52 @@ else
     virsh net-define /etc/libvirt/qemu/networks/intra.xml > /dev/null
     virsh net-start intra > /dev/null
     virsh net-autostart intra > /dev/null
-    echo "  "
-
-    echo "✅ Red intra creada ✅"
+    echo "⭐ Red intra creada correctamente ⭐"
     echo ""
+    sleep 2
 fi
-
-
-
-        echo "⭐ Creando red intra ⭐"
-        virsh -c qemu:///system net-define intra.xml >/dev/null
-        virsh -c qemu:///system net-autostart intra.xml >/dev/null
-        sleep 2
-        echo "⭐ Red intra creada correctamente ⭐"
-        sleep 1
 
 
 # Crea una máquina virtual (maquina1) conectada a la red intra, con 1 GiB de RAM, que utilice como disco raíz maquina1.qcow2 y que se inicie automáticamente. Arranca la máquina. Modifica el fichero /etc/hostname con maquina1.
 
 echo "⭐ Creando máquina virtual maquina1 ⭐"
-virt-install --connect qemu:///system --virt-type kvm --name maquina1 --os-variant debian10 --network network=intra --disk maquina1.qcow2 --import --memory 1024 --vcpus 2 --noautoconsole > /dev/null
-virt-install -c qemu:///system  autostart maquina1 > /dev/null
-sleep 10
-echo "⭐ Máquina virtual maquina1 creada correctamente ⭐"
+echo ""
+sleep 2
 
-echo "⭐ Modificando el fichero /etc/hostname con maquina1 ⭐"
+  # Comprobamos si existe la máquina virtual
 
+if virsh list --all | grep -q "maquina1"; then
+    echo "✅ Máquina virtual maquina1 encontrada ✅"
+    echo ""
 
-echo "⭐ Fichero /etc/hostname modificado correctamente ⭐"
+else
 
-echo "⭐ Máquina virtual maquina1 creada correctamente ⭐"
+    echo "❌ Máquina virtual maquina1 no encontrada ❌"
+    echo ""
+
+    echo "⭐ Creando máquina virtual maquina1 ⭐"
+    virt-install --connect qemu:///system --virt-type kvm --name maquina1 --os-variant debian10 --network network=intra --disk maquina1.qcow2 --import --memory 1024 --vcpus 2 --noautoconsole >/dev/null
+    virsh -c qemu:///system autostart maquina1 >/dev/null
+    echo "⭐ Máquina virtual maquina1 creada correctamente ⭐"
+    echo ""
+    echo "⭐ Arrancando máquina virtual maquina1 ⭐"
+    sleep 23
+
+    echo "⭐ Máquina virtual maquina1 arrancada correctamente ⭐"
+    echo ""
+    sleep 2
+    ip=$(virsh -c qemu:///system domifaddr maquina1 | grep 10.10.20 | awk '{print $4}' | sed 's/...$//')
+    echo "⭐ IP de la máquina virtual maquina1: $ip ⭐"
+    echo ""
+    sleep 2
+    echo "⭐ Modificando el hostname a maquina1 ⭐"
+    echo ""
+    ssh-keyscan -H "$ip" >> ~/.ssh/known_hosts 2>/dev/null
+    ssh -i virt debian@"$ip" "sudo hostnamectl set-hostname maquina1"
+    ssh -i virt debian@"$ip" "sudo sh -c 'echo "127.0.0.1 maquina1" > /etc/hosts'" 2>/dev/null
+    echo "⭐ Modificado correctamente ⭐"
+fi
+
 
 
 
