@@ -98,7 +98,7 @@ echo "⭐ Comprobando si existe la red intra ⭐"
 echo ""
 sleep 2
 
-if virsh -c qemu:///system net-list --all | grep "intra"; then
+if virsh -c qemu:///system net-list --all | grep "intra" > /dev/null; then
     echo "✅ Red intra encontrada ✅"
     echo ""
 
@@ -123,7 +123,7 @@ sleep 2
 
   # Comprobamos si existe la máquina virtual
 
-if virsh -c qemu:///system list --all | grep "maquina1"; then
+if virsh -c qemu:///system list --all | grep "maquina1" > /dev/null; then
     echo "✅ Máquina virtual maquina1 encontrada ✅"
     echo ""
 
@@ -133,7 +133,7 @@ else
     echo ""
 
     echo "⭐ Creando máquina virtual maquina1 ⭐"
-    virt-install --connect qemu:///system --virt-type kvm --name maquina1 --os-variant debian10 --network network=intra --disk maquina1.qcow2 --import --memory 1024 --vcpus 2 --noautoconsole >/dev/null
+    virt-install --connect qemu:///system --virt-type kvm --name maquina1 --disk maquina1.qcow2 --os-variant debian10 --memory 1024 --vcpus 1 --network network=intra --autostart --import --noautoconsole >/dev/null
     virsh -c qemu:///system autostart maquina1 >/dev/null
     echo "⭐ Máquina virtual maquina1 creada correctamente ⭐"
     echo ""
@@ -142,16 +142,16 @@ fi
 
   # Verificamos que la máquina virtual existe y configuramos
 
-if virsh list --all | grep -q "maquina1"; then
-    ip=$(virsh -c qemu:///system domifaddr maquina1 | grep 10.10.20 | awk '{print $4}' | sed 's/...$//')
-    echo "⭐ IP de la máquina virtual maquina1: $ip ⭐"
+if virsh -c qemu:///system list --all | grep "maquina1" > /dev/null; then
+    ip=$(virsh -c qemu:///system domifaddr maquina1 | awk '{print $4}' | cut -d "/" -f 1 | sed -n 3p)
+    echo "⭐ IP de la máquina virtual maquina1: "$ip" ⭐"
     echo ""
     sleep 2
+    
     echo "⭐ Modificando el hostname a maquina1 ⭐"
     echo ""
     ssh-keyscan "$ip" >> ~/.ssh/known_hosts 2>/dev/null
     ssh -i virt debian@"$ip" "sudo hostnamectl set-hostname maquina1"
-    ssh -i virt debian@"$ip" "sudo sh -c 'echo "127.0.0.1 maquina1" > /etc/hosts'" 2>/dev/null
     echo "⭐ Modificado correctamente ⭐"
     echo ""
     sleep 2
