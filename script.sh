@@ -289,3 +289,29 @@ echo "⭐ Puedes acceder a la página web en http://$ip ⭐"
 echo ""
 read -rp "✨ Pulsa una tecla para continuar 😺💛"
 
+# Instala LXC y crea un linux container llamado container1.
+  
+  # Comprobamos si LXC está instalado
+
+echo "⭐ Comprobando si LXC está instalado ⭐"
+echo ""
+sleep 2
+
+if ssh -i virt debian@"$ip" "dpkg -l | grep lxc" >/dev/null; then
+    echo "✅ LXC instalado ✅"
+    echo ""
+
+else
+
+    echo "❌ LXC no instalado ❌"
+    echo ""
+    sleep 2
+
+    echo "⭐ Instalando LXC ⭐"
+    echo ""
+    ssh -i virt debian@"$ip" "sudo apt update && sudo apt install lxc -y" >/dev/null 2>&1
+    echo "⭐ Instalado correctamente ⭐"
+    echo ""
+    sleep 2
+
+fi
