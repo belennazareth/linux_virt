@@ -322,3 +322,80 @@ else
     sleep 2
 
 fi
+
+
+# Añade una nueva interfaz a la máquina virtual para conectarla a la red pública (al punte br0).
+
+  # Comprobamos si la interfaz enp5so está creada
+
+echo "⭐ Comprobando si la interfaz enp5so está creada ⭐"
+echo ""
+sleep 2
+
+if ssh -i virt debian@"$ip" "ip a | grep enp5so" >/dev/null; then
+    echo "✅ Interfaz enp5so creada ✅"
+    echo ""
+
+else
+
+    echo "❌ Interfaz enp5so no creada ❌"
+    echo ""
+    sleep 2
+
+    echo "⭐ Modificando /etc/network/interfaces ⭐"
+    echo ""
+    ssh -i virt debian@"$ip" "sudo -- bash -c 'echo "auto enp5so" >> /etc/network/interfaces'"
+    ssh -i virt debian@"$ip" "sudo -- bash -c 'echo "iface enp5so inet dhcp" >> /etc/network/interfaces'"
+    echo "⭐ Modificado correctamente ⭐"
+
+    echo "⭐ Apagando maquina1 ⭐"
+    echo ""
+    virsh -c qemu:///system shutdown maquina1 >/dev/null
+    sleep 24
+
+    echo "⭐ Añadiendo br0 ⭐"
+    echo ""
+    virsh -c qemu:///system attach-interface --domain maquina1 --type bridge --source br0 --model virtio --config >/dev/null
+    
+    echo "⭐ Encendiendo maquina1 ⭐"
+    echo ""
+    virsh -c qemu:///system start maquina1 >/dev/null
+    sleep 24
+
+fi
+
+
+# Muestra la nueva IP que ha recibido.
+
+ipbr=$(ssh debian@$ip 'ip address show enp5s0 | egrep -o -m 1 "(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-4]|2[0-5][0-9]|[01]?[0-9][0-9]?)){3}" | egrep -v "255"')
+
+echo "⭐ La nueva IP de la máquina virtual es: $ipbr ⭐"
+
+# Apaga maquina1 y auméntale la RAM a 2 GiB y vuelve a iniciar la máquina.
+
+echo "⭐ Apagando maquina1 ⭐"
+echo ""
+
+virsh -c qemu:///system shutdown maquina1 >/dev/null
+sleep 24
+
+echo "⭐ Aumentando RAM ⭐"
+echo ""
+virsh -c qemu:///system setmaxmem maquina1 2G --config >/dev/null
+virsh -c qemu:///system setmem maquina1 2G --config >/dev/null
+
+echo "⭐ Encendiendo maquina1 ⭐"
+echo ""
+virsh -c qemu:///system start maquina1 >/dev/null
+sleep 24
+
+# Crea un snapshot de la máquina virtual.
+
+echo "⭐ Creando snapshot ⭐"
+echo ""
+virsh -c qemu:///system snapshot-create-as maquina1 --name snapshot1 --description "Snapshot de la máquina virtual" --disk-only --atomic >/dev/null
+
+echo "⭐ Snapshot creado correctamente ⭐"
+echo ""
+echo "🌈🌸✨ Script finalizado ✨🌼🌊"
+echo ""
