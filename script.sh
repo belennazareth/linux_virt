@@ -314,4 +314,11 @@ else
     echo ""
     sleep 2
 
+    echo "⭐ Creando container1 ⭐"
+    echo ""
+    ssh -i virt debian@"$ip" 'sudo lxc-create -n container1 -t debian -- -r bullseye' >/dev/null 2>&1
+    echo "⭐ Creado correctamente ⭐"
+    echo ""
+    sleep 2
+
 fi
