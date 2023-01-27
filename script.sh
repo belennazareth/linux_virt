@@ -328,17 +328,17 @@ fi
 
   # Comprobamos si la interfaz enp5so está creada
 
-echo "⭐ Comprobando si la interfaz enp5so está creada ⭐"
+echo "⭐ Comprobando si la interfaz enp8s0 está creada ⭐"
 echo ""
 sleep 2
 
-if ssh -i virt debian@"$ip" "ip a | grep enp5so" >/dev/null; then
-    echo "✅ Interfaz enp5so creada ✅"
+if ssh -i virt debian@"$ip" "ip a | grep enp8s0" >/dev/null; then
+    echo "✅ Interfaz enp8s0 creada ✅"
     echo ""
 
 else
 
-    echo "❌ Interfaz enp5so no creada ❌"
+    echo "❌ Interfaz enp8s0 no creada ❌"
     echo ""
     sleep 2
 
@@ -356,7 +356,7 @@ else
 
     echo "⭐ Añadiendo br0 ⭐"
     echo ""
-    virsh -c qemu:///system attach-interface --domain maquina1 --type bridge --source br0 --model virtio --config >/dev/null
+    virsh -c qemu:///system attach-interface --domain maquina1 --type bridge --source bridge0 --model virtio --config >/dev/null
     
     echo "⭐ Encendiendo maquina1 ⭐"
     echo ""
@@ -368,7 +368,7 @@ fi
 
 # Muestra la nueva IP que ha recibido.
 
-ipbr=$(ssh -i virt debian@$ip 'ip address show enp8s0 | egrep -o -m 1 "(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-4]|2[0-5][0-9]|[01]?[0-9][0-9]?)){3}" | egrep -v "255"')
+ipbr=$(ssh -i virt debian@"$ip" 'ip a | grep inet | grep enp8s0 | awk "{print \$2}" | sed "s/...$//"')
 
 echo "⭐ La nueva IP de la máquina virtual es: $ipbr ⭐"
 
