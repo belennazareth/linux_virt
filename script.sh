@@ -282,3 +282,10 @@ else
 fi
 
 
+# Muestra por pantalla la dirección IP de máquina1. Pausa el script y comprueba que puedes acceder a la página web.
+
+echo "⭐ La dirección IP de la máquina virtual es: $ip ⭐"
+echo "⭐ Puedes acceder a la página web en http://$ip ⭐"
+echo ""
+read -rp "✨ Pulsa una tecla para continuar 😺💛"
+
