@@ -344,8 +344,9 @@ else
 
     echo "⭐ Modificando /etc/network/interfaces ⭐"
     echo ""
-    ssh -i virt debian@"$ip" "sudo -- bash -c 'echo "auto enp5so" >> /etc/network/interfaces'"
-    ssh -i virt debian@"$ip" "sudo -- bash -c 'echo "iface enp5so inet dhcp" >> /etc/network/interfaces'"
+    ssh -i virt debian@"$ip" "sudo -- bash -c 'echo "">> /etc/network/interfaces'"
+    ssh -i virt debian@"$ip" "sudo -- bash -c 'echo "auto enp8s0" >> /etc/network/interfaces'"
+    ssh -i virt debian@"$ip" "sudo -- bash -c 'echo "iface enp8s0 inet dhcp" >> /etc/network/interfaces'"
     echo "⭐ Modificado correctamente ⭐"
 
     echo "⭐ Apagando maquina1 ⭐"
@@ -360,14 +361,14 @@ else
     echo "⭐ Encendiendo maquina1 ⭐"
     echo ""
     virsh -c qemu:///system start maquina1 >/dev/null
-    sleep 24
+    sleep 60
 
 fi
 
 
 # Muestra la nueva IP que ha recibido.
 
-ipbr=$(ssh debian@$ip 'ip address show enp5s0 | egrep -o -m 1 "(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-4]|2[0-5][0-9]|[01]?[0-9][0-9]?)){3}" | egrep -v "255"')
+ipbr=$(ssh -i virt debian@$ip 'ip address show enp8s0 | egrep -o -m 1 "(\b25[0-5]|\b2[0-4][0-9]|\b[01]?[0-9][0-9]?)(\.(25[0-4]|2[0-5][0-9]|[01]?[0-9][0-9]?)){3}" | egrep -v "255"')
 
 echo "⭐ La nueva IP de la máquina virtual es: $ipbr ⭐"
 
